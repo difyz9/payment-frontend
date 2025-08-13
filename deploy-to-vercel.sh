@@ -7,6 +7,20 @@ set -e
 
 echo "🚀 开始部署支付管理系统到 Vercel..."
 
+# 检查 Node.js 版本
+echo "🔍 检查 Node.js 版本..."
+node_version=$(node -v)
+echo "当前 Node.js 版本: $node_version"
+
+# 检查版本是否满足要求
+if [[ "$node_version" < "v18.0.0" ]]; then
+    echo "❌ Node.js 版本过低，需要 >= 18.0.0"
+    echo "建议使用 nvm 安装正确版本:"
+    echo "  nvm install 20.16.0"
+    echo "  nvm use 20.16.0"
+    exit 1
+fi
+
 # 检查是否提供了 GitHub 仓库 URL
 if [ -z "$1" ]; then
     echo "❌ 请提供 GitHub 仓库 URL"
@@ -19,7 +33,10 @@ GITHUB_REPO_URL="$1"
 echo "📦 安装依赖..."
 npm install
 
-echo "🔍 运行类型检查..."
+echo "� 验证环境配置..."
+npm run validate:env
+
+echo "�🔍 运行类型检查..."
 npm run type-check
 
 echo "🧹 运行代码检查..."
