@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # 支付管理系统 - 快速部署到 Verceecho "🔧 验证环境配置..."
-npm run validate:env || echo "⚠️  环境验证警告，但不影响部署"脚本
+npm run validate:env || echo "⚠️  环境验证警告，但不影响部署"
+
+echo "⚙️  验证 Vercel 配置..."
+npm run validate:vercel脚本
 # 使用方法: ./deploy-to-vercel.sh [github-repo-url]
 
 set -e

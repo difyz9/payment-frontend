@@ -16,6 +16,7 @@
     "build:dev": "NODE_ENV=development next build",
     "build:nodejs": "NODE_ENV=production next build",
     "validate:env": "node scripts/validate-env.js",
+    "validate:vercel": "node scripts/validate-vercel.js",
     "validate:prod": "node scripts/validate-env.js production",
     "validate:dev": "node scripts/validate-env.js development",
     "prebuild:prod": "npm run validate:prod",
