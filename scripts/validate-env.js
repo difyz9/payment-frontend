@@ -50,8 +50,16 @@ function validateEnvironment(env = 'production') {
   // 验证必需的环境变量
   const requiredVars = [
     'NODE_ENV',
-    'NEXT_PUBLIC_API_BASE_URL',
-    'NEXT_PUBLIC_BASE_PATH'
+    'NEXT_PUBLIC_API_BASE_URL'
+  ];
+  
+  const optionalVars = [
+    'NEXT_PUBLIC_BASE_PATH',
+    'NEXT_PUBLIC_BASE_URL',
+    'NEXT_PUBLIC_APP_ENV',
+    'NEXT_PUBLIC_APP_NAME',
+    'NEXT_PUBLIC_APP_VERSION',
+    'NEXT_PUBLIC_DEBUG'
   ];
   
   const missingVars = [];
@@ -67,10 +75,20 @@ function validateEnvironment(env = 'production') {
     }
   });
   
+  // 验证可选环境变量
+  optionalVars.forEach(varName => {
+    if (envVars.hasOwnProperty(varName)) {
+      const value = envVars[varName] || '(空值)';
+      log(`✅ ${varName}: ${value}`, 'green');
+    } else {
+      log(`⚠️  ${varName}: 未配置 (可选)`, 'yellow');
+    }
+  });
+  
   // 显示其他配置
   log('\n📋 其他配置:', 'blue');
   Object.entries(envVars).forEach(([key, value]) => {
-    if (!requiredVars.includes(key)) {
+    if (!requiredVars.includes(key) && !optionalVars.includes(key)) {
       log(`   ${key}: ${value}`, 'blue');
     }
   });

@@ -3,8 +3,8 @@
   "outputDirectory": "dist",
   "framework": "nextjs",
   "functions": {
-    "src/app/**/*.ts": {
-      "runtime": "edge"
+    "app/**/*.{js,ts}": {
+      "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
