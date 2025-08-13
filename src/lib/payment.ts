@@ -65,12 +65,12 @@ export interface PaymentStats {
 export const paymentAPI = {
   // 创建支付订单
   async createPayment(data: CreatePaymentRequest): Promise<PaymentResponse> {
-    return http.post('/api/payment/create', data);
+    return http.post('/api/v1/payment/create', data);
   },
 
   // 查询订单详情
   async getOrder(orderId: string): Promise<OrderQueryResponse> {
-    return http.get(`/api/payment/order/${orderId}`);
+    return http.get(`/api/v1/payment/order/${orderId}`);
   },
 
   // 获取订单列表
@@ -99,19 +99,19 @@ export const paymentAPI = {
       }
     }
 
-    return http.get('/api/payment/orders', params);
+    return http.get('/api/v1/payment/orders', params);
   },
 
   // 获取支付统计
   async getPaymentStats(appId?: string): Promise<PaymentStats> {
     const params: Record<string, string | number> = {};
     if (appId) params.appId = appId;
-    return http.get('/api/payment/stats', params);
+    return http.get('/api/v1/payment/stats', params);
   },
 
   // 手动查询支付状态
   async queryPaymentStatus(orderId: string): Promise<{ status: string; message: string }> {
-    return http.post(`/api/payment/query/${orderId}`);
+    return http.post(`/api/v1/payment/query/${orderId}`);
   },
 
   // 发起退款
@@ -120,7 +120,7 @@ export const paymentAPI = {
     refundAmount: number, 
     reason?: string
   ): Promise<{ refundId: string; status: string }> {
-    return http.post(`/api/payment/refund/${orderId}`, {
+    return http.post(`/api/v1/payment/refund/${orderId}`, {
       refundAmount,
       reason,
     });
@@ -128,12 +128,12 @@ export const paymentAPI = {
 
   // 获取支付二维码
   async getPaymentQRCode(orderId: string): Promise<{ qrCode: string; expireTime: string }> {
-    return http.get(`/api/payment/qrcode/${orderId}`);
+    return http.get(`/api/v1/payment/qrcode/${orderId}`);
   },
 
   // 取消订单
   async cancelOrder(orderId: string, reason?: string): Promise<{ message: string }> {
-    return http.post(`/api/payment/cancel/${orderId}`, { reason });
+    return http.post(`/api/v1/payment/cancel/${orderId}`, { reason });
   },
 
   // 导出订单数据
@@ -159,7 +159,7 @@ export const paymentAPI = {
     }
 
     const filename = `orders_${new Date().toISOString().split('T')[0]}.${format}`;
-    return http.download('/api/payment/export', filename, { params });
+    return http.download('/api/v1/payment/export', filename, { params });
   },
 
   // 批量操作订单
@@ -168,7 +168,7 @@ export const paymentAPI = {
     action: 'cancel' | 'refund',
     params?: { reason?: string; refundAmount?: number }
   ): Promise<{ success: number; failed: number; errors: string[] }> {
-    return http.post('/api/payment/batch', {
+    return http.post('/api/v1/payment/batch', {
       orderIds,
       action,
       ...params,

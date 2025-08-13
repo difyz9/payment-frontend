@@ -161,37 +161,37 @@ export function formatUserRole(role: string): string {
 export const authAPI = {
   // 登录
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    return http.post('/api/auth/login', credentials);
+    return http.post('/api/v1/auth/login', credentials);
   },
 
   // 注册
   async register(data: RegisterData): Promise<{ message: string }> {
-    return http.post('/api/auth/register', data);
+    return http.post('/api/v1/auth/register', data);
   },
 
   // 忘记密码
   async forgotPassword(email: string): Promise<{ message: string }> {
-    return http.post('/api/auth/forgot-password', { email });
+    return http.post('/api/v1/auth/forgot-password', { email });
   },
 
   // 重置密码
   async resetPassword(token: string, password: string): Promise<{ message: string }> {
-    return http.post('/api/auth/reset-password', { token, password });
+    return http.post('/api/v1/auth/reset-password', { token, password });
   },
 
   // 获取当前用户信息
   async getCurrentUser(): Promise<User> {
-    return http.get('/api/auth/me');
+    return http.get('/api/v1/auth/me');
   },
 
   // 更新用户信息
   async updateProfile(data: Partial<User>): Promise<User> {
-    return http.put('/api/auth/profile', data);
+    return http.put('/api/v1/auth/profile', data);
   },
 
   // 修改密码
   async changePassword(oldPassword: string, newPassword: string): Promise<{ message: string }> {
-    return http.post('/api/auth/change-password', { 
+    return http.post('/api/v1/auth/change-password', { 
       old_password: oldPassword, 
       new_password: newPassword 
     });
@@ -200,7 +200,7 @@ export const authAPI = {
   // 登出
   async logout(): Promise<void> {
     try {
-      await http.post('/api/auth/logout');
+      await http.post('/api/v1/auth/logout');
     } catch (error) {
       console.error('登出请求失败:', error);
     } finally {
@@ -215,6 +215,6 @@ export const authAPI = {
       throw new Error('没有刷新令牌');
     }
     
-    return http.post('/api/auth/refresh', { refresh_token: refreshToken });
+    return http.post('/api/v1/auth/refresh', { refresh_token: refreshToken });
   },
 };

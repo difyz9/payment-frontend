@@ -103,10 +103,15 @@
         <div class="test-section">
             <h3>路径映射验证</h3>
             <div class="url-display">
-                <strong>前端请求:</strong> /api/auth/login<br>
-                <strong>Vercel 代理后:</strong> https://www.coding520.top/pay-api/api/auth/login
+                <strong>统一的 API 路径:</strong><br>
+                /api/v1/auth/login → https://www.coding520.top/pay-api/v1/auth/login<br>
+                /api/v1/apps → https://www.coding520.top/pay-api/v1/apps<br>
+                /api/v1/orders → https://www.coding520.top/pay-api/v1/orders<br><br>
+                <strong>优势:</strong> 前后端路径统一，版本化管理清晰
             </div>
             <button onclick="checkPathMapping()">验证路径映射</button>
+            <button onclick="testOrdersAPI()">测试订单 API</button>
+            <button onclick="testAuthAPI()">测试认证 API</button>
             <div id="pathResult" class="result" style="display:none;"></div>
         </div>
     </div>
@@ -178,7 +183,7 @@
             result.textContent = '正在测试登录...';
 
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch('/api/v1/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -189,8 +194,11 @@
                 const responseText = await response.text();
                 
                 result.className = response.ok ? 'result success' : 'result error';
-                result.textContent = `状态码: ${response.status}\n` +
+                result.textContent = `登录测试结果:\n` +
+                                   `状态码: ${response.status}\n` +
                                    `状态文本: ${response.statusText}\n` +
+                                   `请求路径: /api/v1/auth/login\n` +
+                                   `实际代理到: https://www.coding520.top/pay-api/v1/auth/login\n` +
                                    `响应内容: ${responseText}`;
 
             } catch (error) {
@@ -207,13 +215,85 @@
             
             const isVercel = window.location.host.includes('vercel.app');
             const mapping = isVercel ? 
-                '✅ 在 Vercel 环境，路径会被代理:\n' +
-                '/api/auth/login → https://www.coding520.top/pay-api/api/auth/login' :
+                '✅ 统一的 API 路径映射 (Vercel 环境):\n' +
+                '所有 API: /api/v1/* → https://www.coding520.top/pay-api/v1/*\n\n' +
+                '具体示例:\n' +
+                '• 认证: /api/v1/auth/login → /v1/auth/login\n' +
+                '• 应用: /api/v1/apps → /v1/apps\n' +
+                '• 订单: /api/v1/orders → /v1/orders' :
                 '⚠️ 在本地环境，直接访问后端:\n' +
-                '/api/auth/login → http://localhost:8089/api/auth/login';
+                'baseURL → http://localhost:8089';
             
             result.textContent = mapping + '\n\n' +
                                 '当前环境: ' + (isVercel ? 'Vercel 生产环境' : '本地开发环境');
+        }
+
+        // 测试认证 API
+        async function testAuthAPI() {
+            const result = document.getElementById('pathResult');
+            result.style.display = 'block';
+            result.className = 'result info';
+            result.textContent = '正在测试认证 API...';
+
+            try {
+                const response = await fetch('/api/v1/auth/me', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                result.className = response.status === 401 ? 'result info' : (response.ok ? 'result success' : 'result error');
+                result.textContent = `认证 API 测试结果:\n` +
+                                   `状态码: ${response.status}\n` +
+                                   `状态文本: ${response.statusText}\n` +
+                                   `请求 URL: /api/v1/auth/me\n` +
+                                   `实际代理到: https://www.coding520.top/pay-api/v1/auth/me`;
+
+                if (response.status === 401) {
+                    result.textContent += '\n\n✅ 401 状态码表示 API 路径正确，只是需要认证';
+                } else if (response.ok) {
+                    const data = await response.text();
+                    result.textContent += `\n响应内容: ${data.substring(0, 200)}...`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `认证 API 测试错误: ${error.message}`;
+            }
+        }
+
+        // 测试订单 API
+        async function testOrdersAPI() {
+            const result = document.getElementById('pathResult');
+            result.style.display = 'block';
+            result.className = 'result info';
+            result.textContent = '正在测试订单 API...';
+
+            try {
+                const response = await fetch('/api/v1/orders?page=1&pageSize=5', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                result.className = response.status === 401 ? 'result info' : (response.ok ? 'result success' : 'result error');
+                result.textContent = `订单 API 测试结果:\n` +
+                                   `状态码: ${response.status}\n` +
+                                   `状态文本: ${response.statusText}\n` +
+                                   `请求 URL: /api/v1/orders\n` +
+                                   `实际代理到: https://www.coding520.top/pay-api/v1/orders`;
+
+                if (response.status === 401) {
+                    result.textContent += '\n\n✅ 401 状态码表示 API 路径正确，只是需要认证';
+                } else if (response.ok) {
+                    const data = await response.text();
+                    result.textContent += `\n响应内容: ${data.substring(0, 200)}...`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `订单 API 测试错误: ${error.message}`;
+            }
         }
 
         // 页面加载时显示环境信息

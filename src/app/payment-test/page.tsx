@@ -111,7 +111,7 @@ export default function PaymentTestPage() {
       }
 
       // 使用封装的HTTP客户端调用支付API
-      const response = await http.post('/api/payment/pay', {
+      const response = await http.post('/api/v1/payment/pay', {
         subject: orderData.subject,
         amount: parseFloat(orderData.amount),
         payWay: orderData.paymentMethod,
@@ -191,7 +191,7 @@ export default function PaymentTestPage() {
       }
 
       // 使用封装的HTTP客户端调用支付API
-      const response = await http.get(`/api/payment/query/${queryData.outTradeNo}`, undefined, { headers });
+      const response = await http.get(`/api/v1/payment/query/${queryData.outTradeNo}`, undefined, { headers });
 
       setTestResults(prev => prev.map(test => 
         test.id === testId 

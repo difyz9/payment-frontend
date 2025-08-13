@@ -11,7 +11,7 @@ interface LoginResponse {
 
 export const authAPI = {
   async login(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
-    const response = await http.post<LoginResponse>('/api/auth/login', credentials);
+    const response = await http.post<LoginResponse>('/api/v1/auth/login', credentials);
     // 返回前端期望的格式
     return {
       user: response.user,
@@ -20,15 +20,15 @@ export const authAPI = {
   },
 
   async register(data: RegisterData): Promise<void> {
-    await http.post('/api/auth/register', data);
+    await http.post('/api/v1/auth/register', data);
   },
 
   async logout(): Promise<void> {
-    await http.post('/api/auth/logout');
+    await http.post('/api/v1/auth/logout');
   },
 
   async getCurrentUser(): Promise<User> {
-    const response = await http.get<User>('/api/auth/me');
+    const response = await http.get<User>('/api/v1/auth/me');
     return response;
   }
 };

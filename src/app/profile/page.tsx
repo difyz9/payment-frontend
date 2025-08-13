@@ -31,7 +31,7 @@ function ProfilePageContent() {
 
     try {
       // 调用更新用户信息API
-      const response = await fetch('/api/auth/profile', {
+      const response = await fetch('/api/v1/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
