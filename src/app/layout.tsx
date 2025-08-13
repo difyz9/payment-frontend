@@ -3,6 +3,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import MainLayout from "@/components/layout/MainLayout";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "支付服务管理",
@@ -25,6 +27,8 @@ export default function RootLayout({
           </MainLayout>
         </AuthProvider>
         <Toaster />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

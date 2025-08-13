@@ -81,7 +81,7 @@ git push -u origin main
 2. 添加你的自定义域名
 3. 按照提示配置 DNS 记录
 
-## 🔧 项目配置说明
+## 🎯 项目配置说明
 
 ### Next.js 配置优化
 项目的 `next.config.ts` 已优化为：
@@ -94,6 +94,13 @@ git push -u origin main
 - API 代理配置（避免 CORS 问题）
 - 安全头设置
 - 简化的框架配置（让 Vercel 自动检测运行时）
+
+### 分析和监控
+已集成 Vercel Analytics 和 Speed Insights：
+- `@vercel/analytics` - 用户行为分析和流量统计
+- `@vercel/speed-insights` - 性能监控和 Core Web Vitals
+- 自动收集页面浏览量、用户地理分布、设备统计等数据
+- 详细配置请查看 `VERCEL_ANALYTICS_GUIDE.md`
 
 ### Node.js 版本管理
 - `package.json` engines 字段指定版本要求
@@ -137,15 +144,18 @@ npm run build  # 静态导出到 dist 目录
 ## 📊 监控和调试
 
 ### Vercel 控制台功能
+- **Analytics**: 访问统计和用户行为分析（已集成 @vercel/analytics）
+- **Speed Insights**: 性能监控和 Core Web Vitals（已集成 @vercel/speed-insights）
 - **Functions**: 查看 API 路由性能
-- **Analytics**: 访问统计
-- **Speed Insights**: 性能监控
 - **Logs**: 实时日志查看
 
 ### 本地调试
 ```bash
 # 检查环境变量
 npm run validate:env
+
+# 验证 Vercel 配置
+npm run validate:vercel
 
 # 类型检查
 npm run type-check
