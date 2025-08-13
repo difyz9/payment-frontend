@@ -93,7 +93,12 @@ git push -u origin main
 `vercel.json` 文件包含：
 - API 代理配置（避免 CORS 问题）
 - 安全头设置
-- 边缘函数优化
+- 简化的框架配置（让 Vercel 自动检测运行时）
+
+### Node.js 版本管理
+- `package.json` engines 字段指定版本要求
+- `.nvmrc` 文件指定推荐版本 (20.16.0)
+- Vercel 自动使用正确的 Node.js 版本
 
 ### 环境变量管理
 - `.env.vercel` - Vercel 专用环境变量
