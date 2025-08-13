@@ -21,6 +21,19 @@
 # production
 /build
 
+# environment variables
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 注意：保留以下模板文件用于部署配置
+# .env.development (开发环境模板)
+# .env.production (生产环境模板)  
+# .env.vercel (Vercel 部署模板)
+# .env.example (环境变量示例)
+
 # misc
 .DS_Store
 *.pem
