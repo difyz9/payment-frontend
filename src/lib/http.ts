@@ -52,7 +52,13 @@ export class HttpClient {
   private errorInterceptors: ErrorInterceptor[] = [];
 
   constructor(baseURL?: string, timeout = 10000) {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8089';
+    // 在生产环境（Vercel）使用相对路径，让 vercel.json 的代理配置生效
+    // 在开发环境使用完整的后端地址
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+      this.baseURL = baseURL || '';  // 空字符串，使用相对路径
+    } else {
+      this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8089';
+    }
     this.defaultTimeout = timeout;
   }
 

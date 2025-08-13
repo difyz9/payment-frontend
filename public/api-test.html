@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 连接测试</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #333; 
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+        button { 
+            background: #007cba; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { 
+            background: #005a87; 
+        }
+        .result { 
+            margin-top: 15px; 
+            padding: 15px; 
+            border-radius: 4px; 
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .success { 
+            background: #d4edda; 
+            border: 1px solid #c3e6cb; 
+            color: #155724;
+        }
+        .error { 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
+            color: #721c24;
+        }
+        .info { 
+            background: #d1ecf1; 
+            border: 1px solid #bee5eb; 
+            color: #0c5460;
+        }
+        .url-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 API 连接测试工具</h1>
+        
+        <div class="test-section">
+            <h3>环境信息</h3>
+            <div id="envInfo" class="result info">正在检测...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试基础连接</h3>
+            <button onclick="testConnection()">测试 API 连接</button>
+            <div id="connectionResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试认证接口</h3>
+            <div>
+                <input type="text" id="username" placeholder="用户名" style="margin: 5px; padding: 8px;">
+                <input type="password" id="password" placeholder="密码" style="margin: 5px; padding: 8px;">
+            </div>
+            <button onclick="testLogin()">测试登录</button>
+            <div id="loginResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>路径映射验证</h3>
+            <div class="url-display">
+                <strong>前端请求:</strong> /api/auth/login<br>
+                <strong>Vercel 代理后:</strong> https://www.coding520.top/pay-api/api/auth/login
+            </div>
+            <button onclick="checkPathMapping()">验证路径映射</button>
+            <div id="pathResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 显示环境信息
+        function showEnvInfo() {
+            const envInfo = document.getElementById('envInfo');
+            const info = {
+                'URL': window.location.href,
+                'Host': window.location.host,
+                'Protocol': window.location.protocol,
+                'User Agent': navigator.userAgent.substring(0, 100) + '...',
+                'Is Vercel': window.location.host.includes('vercel.app') ? '是' : '否'
+            };
+            
+            let infoText = '';
+            for (const [key, value] of Object.entries(info)) {
+                infoText += `${key}: ${value}\n`;
+            }
+            envInfo.textContent = infoText;
+        }
+
+        // 测试基础连接
+        async function testConnection() {
+            const result = document.getElementById('connectionResult');
+            result.style.display = 'block';
+            result.className = 'result info';
+            result.textContent = '正在测试连接...';
+
+            try {
+                const response = await fetch('/api/auth/me', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                result.className = response.ok ? 'result success' : 'result error';
+                result.textContent = `状态码: ${response.status}\n` +
+                                   `状态文本: ${response.statusText}\n` +
+                                   `响应头: ${JSON.stringify([...response.headers], null, 2)}`;
+
+                if (response.ok) {
+                    const data = await response.text();
+                    result.textContent += `\n响应内容: ${data}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `连接错误: ${error.message}`;
+            }
+        }
+
+        // 测试登录
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const result = document.getElementById('loginResult');
+            
+            if (!username || !password) {
+                result.style.display = 'block';
+                result.className = 'result error';
+                result.textContent = '请输入用户名和密码';
+                return;
+            }
+
+            result.style.display = 'block';
+            result.className = 'result info';
+            result.textContent = '正在测试登录...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const responseText = await response.text();
+                
+                result.className = response.ok ? 'result success' : 'result error';
+                result.textContent = `状态码: ${response.status}\n` +
+                                   `状态文本: ${response.statusText}\n` +
+                                   `响应内容: ${responseText}`;
+
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `登录错误: ${error.message}`;
+            }
+        }
+
+        // 验证路径映射
+        function checkPathMapping() {
+            const result = document.getElementById('pathResult');
+            result.style.display = 'block';
+            result.className = 'result info';
+            
+            const isVercel = window.location.host.includes('vercel.app');
+            const mapping = isVercel ? 
+                '✅ 在 Vercel 环境，路径会被代理:\n' +
+                '/api/auth/login → https://www.coding520.top/pay-api/api/auth/login' :
+                '⚠️ 在本地环境，直接访问后端:\n' +
+                '/api/auth/login → http://localhost:8089/api/auth/login';
+            
+            result.textContent = mapping + '\n\n' +
+                                '当前环境: ' + (isVercel ? 'Vercel 生产环境' : '本地开发环境');
+        }
+
+        // 页面加载时显示环境信息
+        window.onload = function() {
+            showEnvInfo();
+            checkPathMapping();
+        };
+    </script>
+</body>
+</html>
