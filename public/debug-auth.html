@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证调试工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .log { background: #f5f5f5; padding: 10px; border-radius: 3px; max-height: 400px; overflow-y: auto; 
+               font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+        input, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:disabled { background: #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .token-display { word-break: break-all; font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 认证问题调试工具</h1>
+    
+    <div class="section">
+        <h3>步骤 1: 登录测试</h3>
+        <input type="email" id="email" value="guanpeizuo@126.com" placeholder="邮箱" style="width: 200px;">
+        <input type="password" id="password" value="Ab123456" placeholder="密码" style="width: 200px;">
+        <button onclick="doLogin()">登录</button>
+        <button onclick="clearStorage()">清除存储</button>
+    </div>
+    
+    <div class="section">
+        <h3>步骤 2: Token 状态检查</h3>
+        <button onclick="checkStorage()">检查 localStorage</button>
+        <button onclick="testDirectRequest()">直接测试 API</button>
+        <div id="tokenStatus"></div>
+    </div>
+    
+    <div class="section">
+        <h3>步骤 3: 手动测试用户信息</h3>
+        <input type="text" id="manualToken" placeholder="手动输入 token" style="width: 400px;">
+        <button onclick="testWithManualToken()">使用手动 Token 测试</button>
+    </div>
+    
+    <div class="section">
+        <h3>调试日志</h3>
+        <button onclick="clearLogs()">清除日志</button>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://www.coding520.top/payment';
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${timestamp}] ${message}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            log('🗑️ localStorage 已清空');
+            updateTokenStatus();
+        }
+        
+        function updateTokenStatus() {
+            const token = localStorage.getItem('auth_token');
+            const user = localStorage.getItem('auth_user');
+            const statusDiv = document.getElementById('tokenStatus');
+            
+            if (token) {
+                statusDiv.innerHTML = `
+                    <div><strong>Token:</strong> <div class="token-display">${token}</div></div>
+                    <div><strong>用户:</strong> ${user || '无'}</div>
+                `;
+            } else {
+                statusDiv.innerHTML = '<div style="color: red;">无 Token</div>';
+            }
+        }
+        
+        function checkStorage() {
+            log('🔍 检查 localStorage...');
+            const token = localStorage.getItem('auth_token');
+            const user = localStorage.getItem('auth_user');
+            
+            log(`Token: ${token ? token.substring(0, 50) + '...' : 'null'}`);
+            log(`User: ${user || 'null'}`);
+            
+            // 检查 token 是否过期
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const now = Math.floor(Date.now() / 1000);
+                    const expired = now > payload.exp;
+                    log(`Token 过期状态: ${expired ? '已过期' : '有效'}`);
+                    log(`过期时间: ${new Date(payload.exp * 1000).toLocaleString()}`);
+                    log(`当前时间: ${new Date().toLocaleString()}`);
+                } catch (e) {
+                    log(`❌ Token 解析失败: ${e.message}`, 'error');
+                }
+            }
+            
+            updateTokenStatus();
+        }
+        
+        async function doLogin() {
+            try {
+                log('🚀 开始登录...');
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                log(`📥 登录响应状态: ${response.status}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                log(`📄 登录响应: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.code === 200 && data.data) {
+                    const { user, token } = data.data;
+                    localStorage.setItem('auth_token', token);
+                    localStorage.setItem('auth_user', JSON.stringify(user));
+                    
+                    log(`✅ 登录成功，Token 已保存`, 'success');
+                    updateTokenStatus();
+                } else {
+                    throw new Error('登录响应格式错误');
+                }
+                
+            } catch (error) {
+                log(`❌ 登录失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDirectRequest() {
+            try {
+                log('👤 测试获取用户信息...');
+                const token = localStorage.getItem('auth_token');
+                
+                if (!token) {
+                    log('❌ 没有找到 Token，请先登录', 'error');
+                    return;
+                }
+                
+                log(`🔐 使用 Token: ${token.substring(0, 50)}...`);
+                
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📥 API 响应状态: ${response.status}`);
+                log(`📋 请求头信息: Authorization: Bearer ${token.substring(0, 50)}...`);
+                
+                const data = await response.json();
+                log(`📄 API 响应: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.status === 200) {
+                    log('✅ 获取用户信息成功！', 'success');
+                } else {
+                    log(`❌ API 请求失败: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 请求错误: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testWithManualToken() {
+            try {
+                const manualToken = document.getElementById('manualToken').value;
+                if (!manualToken) {
+                    log('❌ 请输入 Token', 'error');
+                    return;
+                }
+                
+                log('🧪 使用手动 Token 测试...');
+                log(`🔐 Token: ${manualToken.substring(0, 50)}...`);
+                
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${manualToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📥 API 响应状态: ${response.status}`);
+                
+                const data = await response.json();
+                log(`📄 API 响应: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.status === 200) {
+                    log('✅ 手动 Token 测试成功！', 'success');
+                    // 保存有效的 token
+                    localStorage.setItem('auth_token', manualToken);
+                    updateTokenStatus();
+                } else {
+                    log(`❌ 手动 Token 测试失败: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 手动测试错误: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载时检查状态
+        document.addEventListener('DOMContentLoaded', function() {
+            log('📱 页面已加载');
+            checkStorage();
+        });
+    </script>
+</body>
+</html>
