@@ -3,8 +3,8 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
-      "source": "/api/v1/(.*)",
-      "destination": "https://www.coding520.top/pay-api/v1/$1"
+      "source": "/(.*)",
+      "destination": "https://www.coding520.top/pay-api/$1"
     }
   ],
   "headers": [
