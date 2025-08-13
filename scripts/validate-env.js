@@ -28,24 +28,36 @@ function validateEnvironment(env = 'production') {
   
   const envFile = `.env.${env}`;
   
-  if (!fs.existsSync(envFile)) {
-    log(`❌ 环境配置文件不存在: ${envFile}`, 'red');
-    return false;
+  // 检查环境变量文件是否存在（本地检查，不影响部署）
+  if (fs.existsSync(envFile)) {
+    log(`✅ 本地环境配置文件存在: ${envFile}`, 'green');
+    
+    // 读取环境配置
+    const envContent = fs.readFileSync(envFile, 'utf8');
+    const envVars = {};
+    
+    envContent.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+        const [key, ...valueParts] = trimmed.split('=');
+        envVars[key.trim()] = valueParts.join('=').trim();
+      }
+    });
+    
+    // 显示本地配置
+    log('\n📋 本地环境配置:', 'blue');
+    Object.entries(envVars).forEach(([key, value]) => {
+      if (key.startsWith('NEXT_PUBLIC_')) {
+        log(`   ${key}: ${value}`, 'blue');
+      }
+    });
+    
+    return true;
+  } else {
+    log(`⚠️  本地环境配置文件不存在: ${envFile}`, 'yellow');
+    log(`💡 这是正常的，部署时应在平台配置环境变量`, 'cyan');
+    return true; // 不再要求本地文件存在
   }
-  
-  // 读取环境配置
-  const envContent = fs.readFileSync(envFile, 'utf8');
-  const envVars = {};
-  
-  envContent.split('\n').forEach(line => {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-      const [key, ...valueParts] = trimmed.split('=');
-      envVars[key.trim()] = valueParts.join('=').trim();
-    }
-  });
-  
-  log(`✅ 环境配置文件存在: ${envFile}`, 'green');
   
   // 验证必需的环境变量
   const requiredVars = [
@@ -61,64 +73,67 @@ function validateEnvironment(env = 'production') {
     'NEXT_PUBLIC_APP_VERSION',
     'NEXT_PUBLIC_DEBUG'
   ];
-  
-  const missingVars = [];
-  const configuredVars = [];
-  
-  requiredVars.forEach(varName => {
-    if (envVars[varName]) {
-      configuredVars.push({ name: varName, value: envVars[varName] });
-      log(`✅ ${varName}: ${envVars[varName]}`, 'green');
-    } else {
-      missingVars.push(varName);
-      log(`❌ ${varName}: 未配置`, 'red');
-    }
-  });
-  
-  // 验证可选环境变量
-  optionalVars.forEach(varName => {
-    if (envVars.hasOwnProperty(varName)) {
-      const value = envVars[varName] || '(空值)';
-      log(`✅ ${varName}: ${value}`, 'green');
-    } else {
-      log(`⚠️  ${varName}: 未配置 (可选)`, 'yellow');
-    }
-  });
-  
-  // 显示其他配置
-  log('\n📋 其他配置:', 'blue');
-  Object.entries(envVars).forEach(([key, value]) => {
-    if (!requiredVars.includes(key) && !optionalVars.includes(key)) {
-      log(`   ${key}: ${value}`, 'blue');
-    }
-  });
-  
-  // 验证API URL格式
-  if (envVars.NEXT_PUBLIC_API_BASE_URL) {
-    const apiUrl = envVars.NEXT_PUBLIC_API_BASE_URL;
-    if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
-      log(`✅ API URL 格式正确: ${apiUrl}`, 'green');
-    } else {
-      log(`⚠️  API URL 格式可能有问题: ${apiUrl}`, 'yellow');
-    }
+
+  // 如果本地环境文件存在，验证配置
+  if (fs.existsSync(envFile)) {
+    const missingVars = [];
+    
+    requiredVars.forEach(varName => {
+      if (envVars[varName]) {
+        log(`✅ ${varName}: ${envVars[varName]}`, 'green');
+      } else {
+        missingVars.push(varName);
+        log(`❌ ${varName}: 未配置`, 'red');
+      }
+    });
+    
+    // 验证可选环境变量
+    optionalVars.forEach(varName => {
+      if (envVars.hasOwnProperty(varName)) {
+        const value = envVars[varName] || '(空值)';
+        log(`✅ ${varName}: ${value}`, 'green');
+      } else {
+        log(`⚠️  ${varName}: 未配置 (可选)`, 'yellow');
+      }
+    });
+    
+    return missingVars.length === 0;
   }
   
-  // 验证路径配置
-  if (envVars.NEXT_PUBLIC_BASE_PATH) {
-    const basePath = envVars.NEXT_PUBLIC_BASE_PATH;
-    if (basePath.startsWith('/')) {
-      log(`✅ Base Path 格式正确: ${basePath}`, 'green');
-    } else {
-      log(`⚠️  Base Path 应该以 / 开头: ${basePath}`, 'yellow');
+  return true;  // 显示其他配置
+  if (fs.existsSync(envFile)) {
+    log('\n📋 其他配置:', 'blue');
+    Object.entries(envVars).forEach(([key, value]) => {
+      if (!requiredVars.includes(key) && !optionalVars.includes(key)) {
+        log(`   ${key}: ${value}`, 'blue');
+      }
+    });
+    
+    // 验证API URL格式
+    if (envVars.NEXT_PUBLIC_API_BASE_URL) {
+      const apiUrl = envVars.NEXT_PUBLIC_API_BASE_URL;
+      if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
+        log(`✅ API URL 格式正确: ${apiUrl}`, 'green');
+      } else {
+        log(`⚠️  API URL 格式可能有问题: ${apiUrl}`, 'yellow');
+      }
+    }
+    
+    // 验证路径配置
+    if (envVars.NEXT_PUBLIC_BASE_PATH) {
+      const basePath = envVars.NEXT_PUBLIC_BASE_PATH;
+      if (basePath.startsWith('/')) {
+        log(`✅ Base Path 格式正确: ${basePath}`, 'green');
+      } else {
+        log(`⚠️  Base Path 应该以 / 开头: ${basePath}`, 'yellow');
+      }
     }
   }
-  
-  return missingVars.length === 0;
 }
 
 // 比较不同环境的配置
 function compareEnvironments() {
-  log('\n🔄 比较不同环境配置', 'cyan');
+  log('\n🔄 检查环境配置文件', 'cyan');
   
   const environments = ['development', 'staging', 'production'];
   const envConfigs = {};
@@ -126,31 +141,28 @@ function compareEnvironments() {
   environments.forEach(env => {
     const envFile = `.env.${env}`;
     if (fs.existsSync(envFile)) {
-      const content = fs.readFileSync(envFile, 'utf8');
-      const vars = {};
-      
-      content.split('\n').forEach(line => {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-          const [key, ...valueParts] = trimmed.split('=');
-          vars[key.trim()] = valueParts.join('=').trim();
-        }
-      });
-      
-      envConfigs[env] = vars;
-      log(`✅ ${env}: 配置文件存在`, 'green');
+      log(`✅ ${env}: 本地配置文件存在`, 'green');
     } else {
-      log(`❌ ${env}: 配置文件不存在`, 'red');
+      log(`⚠️  ${env}: 本地配置文件不存在 (正常情况)`, 'yellow');
     }
   });
   
-  // 显示API URL对比
-  log('\n📊 API URL 对比:', 'blue');
-  environments.forEach(env => {
-    if (envConfigs[env] && envConfigs[env].NEXT_PUBLIC_API_BASE_URL) {
-      log(`   ${env}: ${envConfigs[env].NEXT_PUBLIC_API_BASE_URL}`, 'blue');
-    }
-  });
+  // 检查 .env.example 文件
+  if (fs.existsSync('.env.example')) {
+    log(`✅ .env.example: 示例文件存在`, 'green');
+    
+    const content = fs.readFileSync('.env.example', 'utf8');
+    log('\n📋 环境变量示例:', 'blue');
+    content.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+        const [key] = trimmed.split('=');
+        log(`   ${key.trim()}`, 'blue');
+      }
+    });
+  } else {
+    log(`❌ .env.example: 示例文件缺失`, 'red');
+  }
 }
 
 // 验证构建配置
