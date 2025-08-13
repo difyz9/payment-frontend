@@ -103,9 +103,14 @@ log "✅ 项目构建成功"
 
 # 检查 PM2
 if ! command -v pm2 &> /dev/null; then
-    log "安装 PM2 进程管理器..."
-    npm install -g pm2
+    error "PM2 未安装。请先通过 root 用户安装: sudo npm install -g pm2"
+else
+    PM2_CMD="pm2"
+    log "✅ PM2 已安装"
 fi
+
+# 设置 PM2 命令
+PM2_CMD="pm2"
 
 # 创建 PM2 配置
 log "创建 PM2 配置文件..."
@@ -141,23 +146,23 @@ mkdir -p logs
 
 # 停止可能存在的旧进程
 log "停止旧的应用进程..."
-pm2 stop payment-frontend 2>/dev/null || true
-pm2 delete payment-frontend 2>/dev/null || true
+$PM2_CMD stop payment-frontend 2>/dev/null || true
+$PM2_CMD delete payment-frontend 2>/dev/null || true
 
 # 启动应用
 log "启动应用..."
-pm2 start ecosystem.config.js --env production
+$PM2_CMD start ecosystem.config.js --env production
 
 # 保存 PM2 配置
-pm2 save
+$PM2_CMD save
 
 # 检查应用状态
 sleep 3
-if pm2 describe payment-frontend > /dev/null 2>&1; then
+if $PM2_CMD describe payment-frontend > /dev/null 2>&1; then
     log "✅ 应用启动成功"
-    pm2 status
+    $PM2_CMD status
 else
-    error "应用启动失败。请检查日志: pm2 logs payment-frontend"
+    error "应用启动失败。请检查日志: $PM2_CMD logs payment-frontend"
 fi
 
 # 生成 Nginx 配置
@@ -219,13 +224,13 @@ echo "      sudo ln -s /etc/nginx/sites-available/payment-frontend /etc/nginx/si
 echo "      sudo nginx -t && sudo systemctl reload nginx"
 echo ""
 echo "   2. 常用管理命令:"
-echo "      pm2 status              # 查看应用状态"
-echo "      pm2 logs payment-frontend    # 查看日志"
-echo "      pm2 restart payment-frontend # 重启应用"
-echo "      pm2 stop payment-frontend    # 停止应用"
+echo "      $PM2_CMD status              # 查看应用状态"
+echo "      $PM2_CMD logs payment-frontend    # 查看日志"
+echo "      $PM2_CMD restart payment-frontend # 重启应用"
+echo "      $PM2_CMD stop payment-frontend    # 停止应用"
 echo ""
 echo "   3. 设置开机自启:"
-echo "      pm2 startup"
+echo "      $PM2_CMD startup"
 echo "      # 然后执行输出的命令"
 echo ""
 log "✅ 支付管理系统已成功部署到 Ubuntu!"
