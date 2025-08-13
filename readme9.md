@@ -10,11 +10,15 @@ npm install
 npm run build  # 确保本地构建正常
 ```
 
-### 2. 检查环境变量配置
-项目已配置好以下环境文件：
-- `.env.development` - 开发环境
-- `.env.production` - 生产环境
-- `.env.vercel` - Vercel 部署环境
+### 2. 环境变量配置
+⚠️ **重要**：为了安全性，环境变量应在 Vercel 控制台配置，而不是放在代码中。
+
+**推荐做法**：
+- 在 Vercel Dashboard 配置环境变量
+- 不要将 `.env` 文件提交到 Git
+- 使用提供的脚本自动配置：`./scripts/setup-vercel-env.sh`
+
+详细配置说明请参阅：`VERCEL_ENV_SETUP.md`
 
 ## 🚀 部署步骤
 
